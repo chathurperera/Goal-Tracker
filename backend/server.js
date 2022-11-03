@@ -3,11 +3,13 @@ require("dotenv").config();
 const app = express();
 
 //ROUTES
-const goalRoutes = require('./routes/goalRoutes');
+const goalRoutes = require("./routes/goalRoutes");
 
+//MIDDLEWARE
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-app.use('/api/goals',goalRoutes);
-
+app.use("/api/goals", goalRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.get("/api/goals", (req, res) => {
