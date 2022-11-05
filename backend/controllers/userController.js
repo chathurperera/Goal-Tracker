@@ -7,7 +7,27 @@ const bcrypt = require("bcryptjs");
 //@route POST /api/users/login
 //@access public
 const loginUser = asyncHandler(async (req, res) => {
-  res.status(200).json({ message: "logged in" });
+  const { email, password } = req.body;
+
+  //Check for user email
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
+
+  //Verifying the password
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+
+  res.status(200).json({
+    _id: user._id,
+    email: user.email,
+    name: user.name,
+    token: generateToken(user._id),
+  });
 });
 
 //@desc Get user data
@@ -43,14 +63,24 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    return res
-      .status(201)
-      .json({ _id: user._id, email: user.email, name: user.name });
+    return res.status(201).json({
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      token: generateToken(user._id),
+    });
   } else {
     return res.status(400).json({ message: "Invalid user data" });
   }
 
   res.status(200).json({ message: "use registered" });
 });
+
+//Generate JWT
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
+};
 
 module.exports = { getMe, loginUser, registerUser };
